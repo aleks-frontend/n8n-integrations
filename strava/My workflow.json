@@ -1,0 +1,241 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5c4d12f1-579b-4cc4-8268-fb6a1f050a56",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.strava.com/api/v3/athlete/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stravaOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "per_page",
+              "value": "200"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "cde715a4-7c57-412d-bc7b-cf34d39829b1",
+      "name": "HTTP Request",
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "bCB7hNO0usCzT87z",
+          "name": "Strava account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const avgHr = $input.item.json.average_heartrate || 0;\nconst kudos = $input.item.json.kudos_count || 0;\nconst duration = $input.item.json.elapsed_time; // in seconds\nconst hours = Math.floor(duration / 3600);\nconst minutes = Math.floor((duration % 3600) / 60);\nconst date = new Date($input.item.json.start_date_local)\nconst formattedDate = date.toLocaleString(\"en-GB\", {\n  day: \"2-digit\",\n  month: \"short\",\n  year: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\"\n})\n\n// Intensity based on heart rate\nlet intensity;\nif (avgHr > 160) {\n  intensity = \"💀 Ultra hard!\";\n} else if (avgHr > 140) {\n  intensity = \"🔥 Intense!\";\n} else if (avgHr > 120) {\n  intensity = \"💪 Moderate\";\n} else if (avgHr > 90) {\n  intensity = \"🚶 Easy\";\n} else {\n  intensity = \"🧘 Recovery\";\n}\n\n// Popularity based on kudos\nlet popularity;\nif (kudos >= 20) {\n  popularity = \"🏆 Viral!\";\n} else if (kudos >= 10) {\n  popularity = \"🎉 Nice!\";\n} else if (kudos >= 5) {\n  popularity = \"👍 Solid\";\n} else if (kudos > 0) {\n  popularity = \"💬 Needs more love\";\n} else {\n  popularity = \"😶 Ghosted\";\n}\n\n// Activity type emoji\nconst typeEmojiMap = {\n  Run: \"🏃\",\n  Ride: \"🚴\",\n  Hike: \"🥾\",\n  Walk: \"🚶\",\n  Swim: \"🏊\",\n  Workout: \"🏋️\",\n  default: \"🎽\"\n};\n\nconst activityEmoji = typeEmojiMap[$input.item.json.type] || typeEmojiMap.default;\n\nconst formattedResult = {\n  activity_id: $input.item.json.id,\n  activity: `${activityEmoji} ${$input.item.json.name}`,\n  duration: `${hours > 0 ? hours + \"h \" : \"\"}${minutes}min`,\n  intensity,\n  popularity,\n  formattedDate\n};\n\nreturn formattedResult;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c01c33f3-5643-4607-b6cb-71f12b67fe5e",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1yVdewyUscCPIb9ZRqfw9crTSIjktQVV5eVWWMgNfpKk",
+          "mode": "list",
+          "cachedResultName": "Strava data from n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVdewyUscCPIb9ZRqfw9crTSIjktQVV5eVWWMgNfpKk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yVdewyUscCPIb9ZRqfw9crTSIjktQVV5eVWWMgNfpKk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "activity_id"
+          ],
+          "schema": [
+            {
+              "id": "activity",
+              "displayName": "activity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intensity",
+              "displayName": "intensity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "popularity",
+              "displayName": "popularity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "activity_id",
+              "displayName": "activity_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        0
+      ],
+      "id": "85d94665-428d-487c-9bf7-11e56fd3f452",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Qq1Obj2iZm5oaa9u",
+          "name": "GoogleAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "start_date",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "7735e062-2b9a-4302-9a75-de80b0fe6446",
+      "name": "Sort"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c0917ec4-6bc9-4515-830d-597c0431b646",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
+  },
+  "id": "3IMvrzE9niJiT9LB",
+  "tags": []
+}
