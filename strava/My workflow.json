@@ -46,7 +46,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const avgHr = $input.item.json.average_heartrate || 0;\nconst kudos = $input.item.json.kudos_count || 0;\nconst duration = $input.item.json.elapsed_time; // in seconds\nconst hours = Math.floor(duration / 3600);\nconst minutes = Math.floor((duration % 3600) / 60);\nconst date = new Date($input.item.json.start_date_local)\nconst formattedDate = date.toLocaleString(\"en-GB\", {\n  day: \"2-digit\",\n  month: \"short\",\n  year: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\"\n})\n\n// Intensity based on heart rate\nlet intensity;\nif (avgHr > 160) {\n  intensity = \"💀 Ultra hard!\";\n} else if (avgHr > 140) {\n  intensity = \"🔥 Intense!\";\n} else if (avgHr > 120) {\n  intensity = \"💪 Moderate\";\n} else if (avgHr > 90) {\n  intensity = \"🚶 Easy\";\n} else {\n  intensity = \"🧘 Recovery\";\n}\n\n// Popularity based on kudos\nlet popularity;\nif (kudos >= 20) {\n  popularity = \"🏆 Viral!\";\n} else if (kudos >= 10) {\n  popularity = \"🎉 Nice!\";\n} else if (kudos >= 5) {\n  popularity = \"👍 Solid\";\n} else if (kudos > 0) {\n  popularity = \"💬 Needs more love\";\n} else {\n  popularity = \"😶 Ghosted\";\n}\n\n// Activity type emoji\nconst typeEmojiMap = {\n  Run: \"🏃\",\n  Ride: \"🚴\",\n  Hike: \"🥾\",\n  Walk: \"🚶\",\n  Swim: \"🏊\",\n  Workout: \"🏋️\",\n  default: \"🎽\"\n};\n\nconst activityEmoji = typeEmojiMap[$input.item.json.type] || typeEmojiMap.default;\n\nconst formattedResult = {\n  activity_id: $input.item.json.id,\n  activity: `${activityEmoji} ${$input.item.json.name}`,\n  duration: `${hours > 0 ? hours + \"h \" : \"\"}${minutes}min`,\n  intensity,\n  popularity,\n  formattedDate\n};\n\nreturn formattedResult;\n"
+        "jsCode": "const avgHr = $input.item.json.average_heartrate || 0;\nconst kudos = $input.item.json.kudos_count || 0;\nconst duration = $input.item.json.elapsed_time; // in seconds\nconst hours = Math.floor(duration / 3600);\nconst minutes = Math.floor((duration % 3600) / 60);\nconst date = new Date($input.item.json.start_date_local)\nconst formattedDate = date.toLocaleString(\"en-GB\", {\n  day: \"2-digit\",\n  month: \"short\",\n  year: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\"\n})\n\n// Intensity based on heart rate\nlet intensity;\nif (avgHr > 160) {\n  intensity = \"💀 Ultra hard!\";\n} else if (avgHr > 140) {\n  intensity = \"🔥 Intense!\";\n} else if (avgHr > 120) {\n  intensity = \"💪 Moderate\";\n} else if (avgHr > 90) {\n  intensity = \"🚶 Easy\";\n} else {\n  intensity = \"🧘 Recovery\";\n}\n\n// Popularity based on kudos\nlet popularity;\nif (kudos >= 20) {\n  popularity = \"🏆 Viral!\";\n} else if (kudos >= 10) {\n  popularity = \"🎉 Nice!\";\n} else if (kudos >= 5) {\n  popularity = \"👍 Solid\";\n} else if (kudos > 0) {\n  popularity = \"💬 Needs more love\";\n} else {\n  popularity = \"😶 Ghosted\";\n}\n\n// Activity type emoji\nconst typeEmojiMap = {\n  Run: \"🏃\",\n  Ride: \"🚴\",\n  Hike: \"🥾\",\n  Walk: \"🚶\",\n  Swim: \"🏊\",\n  Workout: \"🏋️\",\n  default: \"🎽\"\n};\n\nconst activityEmoji = typeEmojiMap[$input.item.json.type] || typeEmojiMap.default;\n\nconst formattedResult = {\n  activity_id: $input.item.json.id,\n  activity: `${activityEmoji} ${$input.item.json.name}`,\n  activityType: $input.item.json.type,\n  duration: `${hours > 0 ? hours + \"h \" : \"\"}${minutes}min`,\n  intensity,\n  popularity,\n  formattedDate\n};\n\nreturn formattedResult;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -141,8 +141,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        832,
-        0
+        1072,
+        -176
       ],
       "id": "85d94665-428d-487c-9bf7-11e56fd3f452",
       "name": "Append or update row in sheet",
@@ -173,6 +173,183 @@
       ],
       "id": "7735e062-2b9a-4302-9a75-de80b0fe6446",
       "name": "Sort"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.activityType }}",
+                    "rightValue": "Walk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "23b280e5-edc5-47aa-bcdc-178667187e34"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d4b98253-a757-493a-99b4-f903b8900002",
+                    "leftValue": "={{ $json.activityType }}",
+                    "rightValue": "Hike",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "23cdacbe-a555-4b1b-948c-77f6e3eaaf20",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1avwA8GcY09vQe32BID5cCyYha_S6zlKxKdUSB2ZWsHQ",
+          "mode": "list",
+          "cachedResultName": "Strava hikes from n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avwA8GcY09vQe32BID5cCyYha_S6zlKxKdUSB2ZWsHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1avwA8GcY09vQe32BID5cCyYha_S6zlKxKdUSB2ZWsHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "activity_id"
+          ],
+          "schema": [
+            {
+              "id": "activity_id",
+              "displayName": "activity_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "activity",
+              "displayName": "activity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "activityType",
+              "displayName": "activityType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intensity",
+              "displayName": "intensity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "popularity",
+              "displayName": "popularity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "formattedDate",
+              "displayName": "formattedDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        80
+      ],
+      "id": "13b98f37-9b72-46c5-b923-58f4fab6706b",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Qq1Obj2iZm5oaa9u",
+          "name": "GoogleAuth"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -203,7 +380,7 @@
       "main": [
         [
           {
-            "node": "Append or update row in sheet",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -225,13 +402,31 @@
           }
         ]
       ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "c0917ec4-6bc9-4515-830d-597c0431b646",
+  "versionId": "2063b3bb-35dc-4c9f-a30d-f892d9bb38df",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
