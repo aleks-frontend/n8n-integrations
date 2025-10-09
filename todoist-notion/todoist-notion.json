@@ -1,0 +1,155 @@
+{
+  "name": "Todoist -> Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1bf314ec-6412-4613-a55a-be49e5db5643",
+      "name": "On Schedule"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {
+          "labelId": "send-to-notion"
+        }
+      },
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1dbd92b4-c589-4a1a-a30a-71abc14d96d0",
+      "name": "Get all tasks with send-to-notion label",
+      "credentials": {
+        "todoistApi": {
+          "id": "rFluxMewQcqHDAmd",
+          "name": "Todoist account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2879573d-d293-800d-b7d4-d21478ee546d",
+          "mode": "list",
+          "cachedResultName": "My Todoist tasks",
+          "cachedResultUrl": "https://www.notion.so/2879573dd293800db7d4d21478ee546d"
+        },
+        "title": "={{ $json.content }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Todoist ID|number",
+              "numberValue": "={{ parseInt($json.id) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "47d86366-ddbc-4e97-adf3-5c3a1830e57b",
+      "name": "Add to Notion database",
+      "credentials": {
+        "notionApi": {
+          "id": "gmkxKCZ0Z1OeWBay",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "taskId": "={{ $('Get all tasks with send-to-notion label').item.json.id }}",
+        "updateFields": {
+          "description": "=Notion link: {{ $json.url }}\n\n{{ $('Get all tasks with send-to-notion label').item.json.description }}",
+          "labels": [
+            "sent-to-notion"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.todoist",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "bb4c02cd-7418-4645-9bb0-5f2af5b47dd3",
+      "name": "Replace a label on task to prevent adding it again",
+      "credentials": {
+        "todoistApi": {
+          "id": "rFluxMewQcqHDAmd",
+          "name": "Todoist account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get all tasks with send-to-notion label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all tasks with send-to-notion label": {
+      "main": [
+        [
+          {
+            "node": "Add to Notion database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Notion database": {
+      "main": [
+        [
+          {
+            "node": "Replace a label on task to prevent adding it again",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "50ab1a89-bb29-4463-b11c-c889ddf545bc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
+  },
+  "id": "FxYcqM0iTvrQHdCP",
+  "tags": []
+}
