@@ -175,10 +175,10 @@
     {
       "parameters": {
         "conditions": {
-          "boolean": [
+          "string": [
             {
-              "value1": "={{ $json.Complete }}",
-              "value2": true
+              "value1": "={{ $json.Status }}",
+              "value2": "Done"
             }
           ]
         }
@@ -204,10 +204,10 @@
         "event": "pagedUpdatedInDatabase",
         "databaseId": {
           "__rl": true,
+          "value": "2889573d-d293-8094-89b3-f9610533deb1",
           "mode": "list",
-          "value": "e606a7c1-e93d-47fd-8b8d-8000cd6e7522",
-          "cachedResultUrl": "https://www.notion.so/e606a7c1e93d47fd8b8d8000cd6e7522",
-          "cachedResultName": "My Gmail Tasks"
+          "cachedResultName": "My Gmail Tasks",
+          "cachedResultUrl": "https://www.notion.so/2889573dd293809489b3f9610533deb1"
         }
       },
       "id": "ee9879a3-4558-44aa-890f-1f1264c2547b",
@@ -217,14 +217,20 @@
         -832,
         -16
       ],
-      "typeVersion": 1
+      "typeVersion": 1,
+      "credentials": {
+        "notionApi": {
+          "id": "gmkxKCZ0Z1OeWBay",
+          "name": "Notion account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "removeLabels",
         "messageId": "={{ $json['Thread ID'] }}",
         "labelIds": [
-          "Label_9178764513576607415"
+          "Label_3691162011113567247"
         ]
       },
       "id": "89b1ff59-bf50-4e17-a76f-4b97bfd415c7",
@@ -235,7 +241,13 @@
         -16
       ],
       "typeVersion": 2,
-      "webhookId": "a3075c45-d6ae-416d-848b-cf4277262d24"
+      "webhookId": "a3075c45-d6ae-416d-848b-cf4277262d24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YgL94nvnVudeuZ7h",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {},
@@ -465,8 +477,9 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "6f297cc0-d027-4c53-b3d5-1c59aaa961fd",
+  "versionId": "2945aebc-e214-4203-8894-b4475c769980",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
   },
   "id": "M0vSSRegmPRtzPxx",
