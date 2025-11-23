@@ -1,0 +1,174 @@
+{
+  "name": "Open-Meteo testing - current air polution to email and telegram copy",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -16
+      ],
+      "id": "9c85faf7-784f-4bc3-a1b6-579140c5d3c4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ced995c9-6265-43e9-bcfd-f64c1037873f",
+              "name": "message",
+              "value": "=Current air quality in Palić:\n\n- PM10: {{ $json.pm10Now }} µg/m³ — \n  {{ $json.pm10Now < 20 ? \"😊 Good\" : $json.pm10Now < 50 ? \"😐 Moderate\" : $json.pm10Now < 100 ? \"😷 Unhealthy\" : \"☠️ Very Unhealthy\" }}\n\n- PM2.5: {{ $json.pm2_5Now }} µg/m³ — \n  {{ $json.pm2_5Now < 10 ? \"😊 Good\" : $json.pm2_5Now < 25 ? \"😐 Moderate\" : $json.pm2_5Now < 55 ? \"😷 Unhealthy\" : \"☠️ Very Unhealthy\" }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -16
+      ],
+      "id": "05042883-6bd8-4b03-b8c2-1ace70372fbf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "aleksfrontend@gmail.com",
+        "subject": "Current air quality in Palic",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        -208
+      ],
+      "id": "73c09a1b-fd16-491a-95ac-45ddb2cbdbd1",
+      "name": "Send a message",
+      "webhookId": "41f7a631-2491-4b7a-be1e-1249e6b74fa1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YgL94nvnVudeuZ7h",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "534842390",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        224
+      ],
+      "id": "fcbc7f08-0ee9-405f-af5d-fecc46fdc817",
+      "name": "Send a text message",
+      "webhookId": "aaaaed0e-b075-419a-a3ef-b6a92c9091e8",
+      "credentials": {
+        "telegramApi": {
+          "id": "bxdmLo2z3vj2zBYV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=46.1&longitude=19.6667&hourly=pm10,pm2_5&forecast_days=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "79713e2d-bd7e-4f44-883d-0893a05a844e",
+      "name": "Fetch air quality"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the API response\nconst data = $json;\n\n// 2. Extract the hourly arrays\nconst times = data.hourly.time;\nconst pm10 = data.hourly.pm10;\nconst pm2_5 = data.hourly.pm2_5;\n\n// 3. Get current datetime (local)\nconst now = new Date();\n\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth() + 1;\nconst utcDay = now.getUTCDate();\nconst utcHour = now.getUTCHours();\n\n// Format to \"YYYY-MM-DDTHH:00\"\nconst pad = (n) => (n < 10 ? \"0\" + n : n);\nconst formatted =\n    utcYear +\n    \"-\" +\n    pad(utcMonth) +\n    \"-\" +\n    pad(utcDay) +\n    \"T\" +\n    pad(utcHour) +\n    \":00\";\n\n// 4. Find index of the current hour in the times array\nconst index = times.indexOf(formatted);\n\n// If the hour is not found (rare), fallback to nearest hour\nconst fallbackIndex = index !== -1 ? index : 0;\n\n// 5. Build output\nreturn [\n  {\n    json: {\n      now_utc: formatted,\n      now_local: now.toISOString(),\n      index: fallbackIndex,\n      pm10Now: pm10[fallbackIndex],\n      pm2_5Now: pm2_5[fallbackIndex],\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "22f0ecd5-5b80-4b49-95fc-cd88b1b1da21",
+      "name": "Get current pm10 and pm2_5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Fetch air quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch air quality": {
+      "main": [
+        [
+          {
+            "node": "Get current pm10 and pm2_5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get current pm10 and pm2_5": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c026882d-ed1c-4073-b1a6-d176bab1f747",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
+  },
+  "id": "jAPxWpCmUL7pZ6lD",
+  "tags": []
+}
