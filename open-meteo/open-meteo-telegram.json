@@ -1,142 +1,197 @@
 {
-  "name": "Open-Meteo testing - current air polution to email and telegram copy",
+  "name": "Current air quality noification",
   "nodes": [
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -624,
-        -16
-      ],
-      "id": "9c85faf7-784f-4bc3-a1b6-579140c5d3c4",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ced995c9-6265-43e9-bcfd-f64c1037873f",
-              "name": "message",
-              "value": "=Current air quality in Palić:\n\n- PM10: {{ $json.pm10Now }} µg/m³ — \n  {{ $json.pm10Now < 20 ? \"😊 Good\" : $json.pm10Now < 50 ? \"😐 Moderate\" : $json.pm10Now < 100 ? \"😷 Unhealthy\" : \"☠️ Very Unhealthy\" }}\n\n- PM2.5: {{ $json.pm2_5Now }} µg/m³ — \n  {{ $json.pm2_5Now < 10 ? \"😊 Good\" : $json.pm2_5Now < 25 ? \"😐 Moderate\" : $json.pm2_5Now < 55 ? \"😷 Unhealthy\" : \"☠️ Very Unhealthy\" }}\n",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        80,
-        -16
-      ],
-      "id": "05042883-6bd8-4b03-b8c2-1ace70372fbf",
-      "name": "Edit Fields"
-    },
     {
       "parameters": {
         "sendTo": "aleksfrontend@gmail.com",
         "subject": "Current air quality in Palic",
-        "message": "={{ $json.message }}",
+        "message": "={{ $json.output }}",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        384,
-        -208
+        0,
+        0
       ],
-      "id": "73c09a1b-fd16-491a-95ac-45ddb2cbdbd1",
+      "id": "d8e83834-f944-44fb-b804-76bfdfd9a132",
       "name": "Send a message",
       "webhookId": "41f7a631-2491-4b7a-be1e-1249e6b74fa1",
       "credentials": {
         "gmailOAuth2": {
-          "id": "YgL94nvnVudeuZ7h",
+          "id": "W6AGtreKL6RYK1H1",
           "name": "Gmail account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
         "chatId": "534842390",
-        "text": "={{ $json.message }}",
+        "text": "={{ $json.output }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        384,
-        224
+        0,
+        368
       ],
-      "id": "fcbc7f08-0ee9-405f-af5d-fecc46fdc817",
+      "id": "41a7663a-957d-45e0-b9b4-9e1b049a12cd",
       "name": "Send a text message",
       "webhookId": "aaaaed0e-b075-419a-a3ef-b6a92c9091e8",
       "credentials": {
         "telegramApi": {
-          "id": "bxdmLo2z3vj2zBYV",
+          "id": "tOGPjhPFxpGf3Sj4",
           "name": "Telegram account"
         }
       }
     },
     {
       "parameters": {
-        "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=46.1&longitude=19.6667&hourly=pm10,pm2_5&forecast_days=1",
+        "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=52.52&longitude=13.41&hourly=pm10,pm2_5,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide&current=european_aqi",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -384,
-        -16
+        -1104,
+        208
       ],
-      "id": "79713e2d-bd7e-4f44-883d-0893a05a844e",
+      "id": "ec2fb757-cd36-473f-ab76-2e9fccdd94fc",
       "name": "Fetch air quality"
     },
     {
       "parameters": {
-        "jsCode": "// 1. Get the API response\nconst data = $json;\n\n// 2. Extract the hourly arrays\nconst times = data.hourly.time;\nconst pm10 = data.hourly.pm10;\nconst pm2_5 = data.hourly.pm2_5;\n\n// 3. Get current datetime (local)\nconst now = new Date();\n\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth() + 1;\nconst utcDay = now.getUTCDate();\nconst utcHour = now.getUTCHours();\n\n// Format to \"YYYY-MM-DDTHH:00\"\nconst pad = (n) => (n < 10 ? \"0\" + n : n);\nconst formatted =\n    utcYear +\n    \"-\" +\n    pad(utcMonth) +\n    \"-\" +\n    pad(utcDay) +\n    \"T\" +\n    pad(utcHour) +\n    \":00\";\n\n// 4. Find index of the current hour in the times array\nconst index = times.indexOf(formatted);\n\n// If the hour is not found (rare), fallback to nearest hour\nconst fallbackIndex = index !== -1 ? index : 0;\n\n// 5. Build output\nreturn [\n  {\n    json: {\n      now_utc: formatted,\n      now_local: now.toISOString(),\n      index: fallbackIndex,\n      pm10Now: pm10[fallbackIndex],\n      pm2_5Now: pm2_5[fallbackIndex],\n    },\n  },\n];\n"
+        "jsCode": "// 1. Get the API response\nconst data = $json;\n\n// 2. Extract the hourly arrays\nconst times = data.hourly.time;\nconst pm10 = data.hourly.pm10;\nconst pm2_5 = data.hourly.pm2_5;\nconst no2 = data.hourly.nitrogen_dioxide;\nconst o3 = data.hourly.ozone;\nconst so2 = data.hourly.sulphur_dioxide;\nconst co = data.hourly.carbon_monoxide;\n\n// 3. Get current datetime (local)\nconst now = new Date();\nconst utcYear = now.getUTCFullYear();\nconst utcMonth = now.getUTCMonth() + 1;\nconst utcDay = now.getUTCDate();\nconst utcHour = now.getUTCHours();\n\n// Format to \"YYYY-MM-DDTHH:00\"\nconst pad = (n) => (n < 10 ? \"0\" + n : n);\nconst formatted =\n    utcYear +\n    \"-\" +\n    pad(utcMonth) +\n    \"-\" +\n    pad(utcDay) +\n    \"T\" +\n    pad(utcHour) +\n    \":00\";\n\n// 4. Find index of the current hour in the times array\nconst index = times.indexOf(formatted);\nconst fallbackIndex = index !== -1 ? index : 0;\n\n// 5. Build output\nreturn [\n  {\n    json: {\n      now_utc: formatted,\n      now_local: now.toISOString(),\n      index: fallbackIndex,\n      pm10Now: pm10[fallbackIndex],\n      pm10NextHour: pm10[fallbackIndex + 1],\n      pm10InTwoHours: pm10[fallbackIndex + 2],\n      pm2_5Now: pm2_5[fallbackIndex],\n      pm2_5NextHour: pm2_5[fallbackIndex + 1],\n      pm2_5InTwoHours: pm2_5[fallbackIndex + 2],\n      nitrogenDioxideNow: no2[fallbackIndex],\n      nitrogenDioxideNextHour: no2[fallbackIndex + 1],\n      nitrogenDioxideInTwoHours: no2[fallbackIndex + 2],\n      ozoneNow: o3[fallbackIndex],\n      ozoneNextHour: o3[fallbackIndex + 1],\n      ozoneInTwoHours: o3[fallbackIndex + 2],\n      sulphurDioxideNow: so2[fallbackIndex],\n      sulphurDioxideNextHour: so2[fallbackIndex + 1],\n      sulphurDioxideInTwoHours: so2[fallbackIndex + 2],\n      carbonMonoxideNow: co[fallbackIndex],\n      carbonMonoxideNextHour: co[fallbackIndex + 1],\n      carbonMonoxideInTwoHours: co[fallbackIndex + 2],\n    },\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -128,
-        -16
+        -864,
+        192
       ],
-      "id": "22f0ecd5-5b80-4b49-95fc-cd88b1b1da21",
+      "id": "9f64af2f-ce2b-4ada-a39e-71134524ec62",
       "name": "Get current pm10 and pm2_5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        400
+      ],
+      "id": "b51d6e4e-b372-408c-8134-eb65a77e1b74",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "pUwURbWCr5AIjwie",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a custom email text that will be sent to me with your suggestion if I should go out for a walk or not depending on the air quality level defined by:\n- pm 10:  {{ $('Get current pm10 and pm2_5').item.json.pm10Now }}\n- pm 2.5: {{ $('Get current pm10 and pm2_5').item.json.pm2_5Now }}\n- ozone: {{ $json.ozoneNow }}\n- Sulphur Dioxide SO2: {{ $json.sulphurDioxideNow }}\n- Nitrogen Dioxide NO2 {{ $json.nitrogenDioxideNow }}\n\nAdd also an emoji corresponding with the current air quality level.\n(Do not include the Subject, only the message)\n\nInclude also an information about the pm levels for the next hour:\n- pm10: {{ $json.pm10NextHour }}\n- pm 2.5: {{ $json.pm2_5NextHour }}\n- ozone: {{ $json.ozoneNextHour }}\n- Sulphur Dioxide SO2: {{ $json.sulphurDioxideNextHour }}\n- Nitrogen Dioxide NO2 {{ $json.nitrogenDioxideNextHour }}\n\nAnd also in two hours:\n- pm 10: {{ $json.pm10InTwoHours }}\n- pm 2.5: {{ $json.pm2_5InTwoHours }}\n- ozone: {{ $json.ozoneInTwoHours }}\n- Sulphur Dioxide SO2: {{ $json.ozoneInTwoHours }}\n- Nitrogen Dioxide NO2 {{ $json.nitrogenDioxideInTwoHours }}\n\nDo not provide information about the pm levels, just a quick and precise suggestion if it is safe or not and if the face mask should be used or better to stay inside.\n\nGenerate the message in Serbian please.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        208
+      ],
+      "id": "1a5844eb-34df-4e10-9ceb-2e144cc5bd2d",
+      "name": "Walk or no-walk message"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6,9 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        16
+      ],
+      "id": "7ce6f4b4-bfaf-43e6-98c1-7ef20e91ca40",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1616,
+        384
+      ],
+      "id": "168a922c-f3a1-40fa-901d-05c50b3668b1",
+      "name": "Telegram Trigger",
+      "webhookId": "be1cf53d-6356-4e0f-8136-5f1074e77da9",
+      "credentials": {
+        "telegramApi": {
+          "id": "tOGPjhPFxpGf3Sj4",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c26e7c62-fe06-4a65-966c-91f40980d369",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "?",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1392,
+        384
+      ],
+      "id": "f7539a33-c7b5-4542-9138-2813aa8c5776",
+      "name": "If"
     }
   ],
   "pinData": {},
   "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "Fetch air quality",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Send a message",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Send a text message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Fetch air quality": {
       "main": [
         [
@@ -152,7 +207,72 @@
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "Walk or no-walk message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Walk or no-walk message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Walk or no-walk message": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch air quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Fetch air quality",
             "type": "main",
             "index": 0
           }
@@ -160,15 +280,15 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "c026882d-ed1c-4073-b1a6-d176bab1f747",
+  "versionId": "08c3f4a0-1116-48be-8ef5-83bd1297cdc9",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "36bfcd67d2090e32fe4f2cec47f4e012806399e0b9a3d25452e86ccf6fbd30f7"
+    "instanceId": "32046c7d7105c211e2259616606f883c8b5cc71035b30bdbb85dfac864d6105f"
   },
-  "id": "jAPxWpCmUL7pZ6lD",
+  "id": "uqyK1pAETcCqOhWp",
   "tags": []
 }
